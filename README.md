@@ -192,9 +192,120 @@ v 0.0 1.0 0.0
 f 1 2 3
 ```
 
+## Chiptune Music System
+
+Because every demoscene production needs a soundtrack. VESAsterizer includes a complete chiptune tracker and synthesizer engine.
+
+### VTM Format (VESAsterizer Tracker Module)
+
+Human-readable tracker format inspired by classic .MOD/.XM formats:
+
+```
+TITLE My Amazing Track
+TEMPO 140
+
+# Define instruments with synthesis parameters
+INSTRUMENT Lead SQUARE 0.010 0.100 0.600 0.200
+INSTRUMENT Bass SAW 0.005 0.150 0.700 0.150
+
+# Pattern-based sequencing
+PATTERN 16 4
+CH 0: C-4 ... E-4 ... G-4 ... E-4 ... C-4 ... D-4 ... E-4 ... ... ---
+CH 1: C-2 --- E-2 --- G-2 --- E-2 --- C-2 --- D-2 --- E-2 --- G-2 ---
+ENDPATTERN
+
+# Define playback order
+SEQUENCE 0 1 0 2
+```
+
+### Music Player Tool
+
+Test and preview VTM files:
+
+```bash
+# Build the music player
+go build -o musicplayer ./cmd/musicplayer
+
+# Play a track (shows track info and pattern data)
+./musicplayer -music examples/music/demo1.vtm
+./musicplayer -music examples/music/demo2.vtm
+```
+
+### VTM Format Specification
+
+**Header Commands:**
+- `TITLE <name>` - Track title
+- `TEMPO <bpm>` - Tempo in beats per minute
+
+**Instrument Definition:**
+```
+INSTRUMENT <name> <wavetype> <attack> <decay> <sustain> <release>
+```
+
+Wave types: `SQUARE`, `SAW`, `TRIANGLE`, `SINE`, `NOISE`
+
+ADSR values in seconds (attack, decay, release) and 0.0-1.0 (sustain level)
+
+**Pattern Definition:**
+```
+PATTERN <rows> <channels>
+CH <num>: <note> <note> <note> ...
+ENDPATTERN
+```
+
+Note format:
+- `C-4` - Note C in octave 4
+- `C#5` - C sharp in octave 5
+- `---` - Rest (no note)
+- `...` - Continue previous note
+
+**Sequence:**
+```
+SEQUENCE <pattern> <pattern> <pattern> ...
+```
+
+Defines the order patterns are played.
+
+### Synthesis Engine Features
+
+- **5 Waveform Types**: Square, Saw, Triangle, Sine, Noise
+- **ADSR Envelopes**: Full Attack/Decay/Sustain/Release control
+- **Multi-channel**: Up to 8 simultaneous voices
+- **Pattern Sequencer**: Classic tracker-style pattern system
+- **Human-Readable Format**: Edit tracks in any text editor
+
+### Included Demo Tracks
+
+**demo1.vtm** - "Terminal Dreams"
+- 140 BPM, melodic chiptune
+- Demonstrates arpeggio patterns and multi-channel composition
+- 6 patterns, 8-pattern sequence
+
+**demo2.vtm** - "Raster Madness"
+- 160 BPM, aggressive chiptune
+- Fast arpeggios and heavy bass
+- 3 patterns, 8-pattern sequence
+
+### Creating Your Own Music
+
+1. Start with an existing VTM file as template
+2. Define instruments with different waveforms and ADSR
+3. Create patterns (16-32 rows typical)
+4. Compose melodies using note notation (C-4, D#5, etc.)
+5. Arrange patterns in sequence
+6. Test with `musicplayer` tool
+
+**Pro Tips:**
+- Use SQUARE waves for leads and basses
+- SAW waves for rich, harmonic sounds
+- TRIANGLE for softer melodies
+- Short attack times (0.001-0.010) for percussive sounds
+- Longer release times for sustained pads
+- Pattern length of 16 rows = 1 bar at typical tempo
+
 ## Why?
 
-Because sometimes you want to appreciate the fundamentals of computer graphics without the abstraction of modern APIs. This is for the purists who remember when every pixel counted and understanding the math mattered.
+Because sometimes you want to appreciate the fundamentals of computer graphics AND computer music without the abstraction of modern APIs. This is for the purists who remember when every pixel counted, every voice mattered, and understanding the math was essential.
 
 ## License
 

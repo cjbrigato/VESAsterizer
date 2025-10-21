@@ -1,6 +1,7 @@
 # Binaries
 /vesasterizer
 /modelgen
+/musicplayer
 *.exe
 *.exe~
 *.dll
