@@ -1,5 +1,6 @@
 # Binaries
 /vesasterizer
+/modelgen
 *.exe
 *.exe~
 *.dll

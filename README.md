@@ -115,6 +115,68 @@ for ultra-fine brightness gradation
 Unicode modes provide significantly sharper and more detailed rendering
 compared to classic ASCII.
 
+## Demo Models
+
+VESAsterizer includes procedurally generated demo models specifically crafted to showcase the rasterizer's capabilities:
+
+### Running the Demo
+
+```bash
+./demo.sh
+```
+
+This runs through all demo models with various rendering modes and character sets.
+
+### Included Demo Models
+
+**Torus** (`examples/models/demo/torus.obj`)
+- Classic demoscene donut shape
+- 1,152 vertices, 2,304 triangles
+- Perfect for showing smooth curves and shading
+- Best with: `-charset unicode -mode solid`
+
+**Icosphere** (`examples/models/demo/icosphere.obj`)
+- Subdivided icosahedron (low-poly sphere)
+- 162 vertices, 320 triangles
+- Demonstrates smooth shading on curved surfaces
+- Best with: `-charset shade -mode solid`
+
+**Helix** (`examples/models/demo/helix.obj`)
+- Twisted 3D helix/spring
+- 520 vertices, 1,024 triangles
+- Showcases depth buffer with overlapping geometry
+- Best with: `-charset unicode -mode wireframe`
+
+**Sculpture** (`examples/models/demo/sculpture.obj`)
+- Abstract geometric art piece with spikes
+- 384 vertices, 1,104 triangles
+- Complex geometry for testing dense Unicode rendering
+- Best with: `-charset dense -mode solid`
+
+## Procedural Model Generator
+
+VESAsterizer includes `modelgen`, a tool to create custom procedural models:
+
+```bash
+# Build the generator
+go build -o modelgen ./cmd/modelgen
+
+# Generate models
+./modelgen -type torus -output my_torus.obj -detail 64
+./modelgen -type icosphere -output my_sphere.obj -detail 3
+./modelgen -type helix -output my_helix.obj -detail 48
+./modelgen -type sculpture -output my_art.obj -detail 32
+```
+
+### Model Types
+
+- **torus**: Classic donut shape (detail controls major/minor segments)
+- **icosphere**: Subdivided icosahedron (detail = subdivision levels)
+- **helix**: Twisted 3D spring (detail controls segments)
+- **sculpture**: Abstract spiky structure (detail controls layers)
+
+The `-detail` parameter controls geometric complexity. Higher values = more triangles = smoother but slower rendering.
+
 ## Creating Custom Models
 
 VESAsterizer supports Wavefront OBJ files. Create your own models in Blender, Maya, or any 3D modeling tool and export as OBJ.
