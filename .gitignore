@@ -1,5 +1,5 @@
 # Binaries
-vesasterizer
+/vesasterizer
 *.exe
 *.exe~
 *.dll
