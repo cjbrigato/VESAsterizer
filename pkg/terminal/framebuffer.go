@@ -6,9 +6,39 @@ import (
 	"strings"
 )
 
-// Brightness gradient from darkest to brightest
-// Using characters with increasing visual density
-var brightnessRamp = []rune{' ', '.', ':', '-', '=', '+', '*', '#', '%', '@'}
+// CharSet represents different character set modes for rendering
+type CharSet int
+
+const (
+	ASCII CharSet = iota
+	UnicodeBlocks
+	UnicodeShade
+	UnicodeDense
+)
+
+// Brightness gradients for different character sets
+var (
+	// ASCII - Classic ASCII art characters
+	asciiRamp = []rune{' ', '.', ':', '-', '=', '+', '*', '#', '%', '@'}
+
+	// Unicode Block Elements - Smooth gradient using block characters
+	unicodeBlockRamp = []rune{' ', '░', '▒', '▓', '█'}
+
+	// Unicode Shade - Extended shading with more granularity
+	unicodeShadeRamp = []rune{' ', '·', '⋅', '∘', '○', '●', '◉', '⬤', '⬛'}
+
+	// Unicode Dense - Maximum density gradient using various Unicode blocks
+	unicodeDenseRamp = []rune{
+		' ', '·', '⋅', '░', '▒', '▓', '█', '▓', '▒', '░',
+		'▀', '▄', '▌', '▐', '█', '▓', '▒', '░', '▪', '▫',
+		'■', '□', '▢', '▣', '▤', '▥', '▦', '▧', '▨', '▩',
+		'▬', '▭', '▮', '▯', '▰', '▱', '◆', '◇', '◈', '◉',
+		'◊', '○', '◌', '◍', '◎', '●', '◐', '◑', '◒', '◓',
+		'◔', '◕', '◖', '◗', '◘', '◙', '◚', '◛', '◜', '◝',
+		'◞', '◟', '◠', '◡', '◢', '◣', '◤', '◥', '◦', '◧',
+		'◨', '◩', '◪', '◫', '◬', '◭', '◮', '◯', '⬛', '⬜',
+	}
+)
 
 // Framebuffer represents a character-based framebuffer with depth buffer
 type Framebuffer struct {
@@ -16,6 +46,7 @@ type Framebuffer struct {
 	Height      int
 	colorBuffer []float64 // Brightness values [0, 1]
 	depthBuffer []float64 // Depth values for z-buffering
+	charset     CharSet   // Character set to use for rendering
 }
 
 // NewFramebuffer creates a new framebuffer
@@ -26,7 +57,13 @@ func NewFramebuffer(width, height int) *Framebuffer {
 		Height:      height,
 		colorBuffer: make([]float64, size),
 		depthBuffer: make([]float64, size),
+		charset:     ASCII, // Default to ASCII
 	}
+}
+
+// SetCharSet sets the character set for rendering
+func (fb *Framebuffer) SetCharSet(cs CharSet) {
+	fb.charset = cs
 }
 
 // Clear resets the framebuffer
@@ -72,7 +109,7 @@ func (fb *Framebuffer) Render() string {
 	for y := 0; y < fb.Height; y++ {
 		for x := 0; x < fb.Width; x++ {
 			brightness := fb.GetPixel(x, y)
-			char := brightnessToChar(brightness)
+			char := fb.brightnessToChar(brightness)
 			sb.WriteRune(char)
 		}
 		sb.WriteRune('\n')
@@ -131,16 +168,31 @@ func (fb *Framebuffer) DrawLine(x0f, y0f, z0, x1f, y1f, z1, brightness float64) 
 	}
 }
 
-// brightnessToChar converts a brightness value to an ASCII character
-func brightnessToChar(brightness float64) rune {
-	idx := int(brightness * float64(len(brightnessRamp)-1))
+// brightnessToChar converts a brightness value to a character based on the selected charset
+func (fb *Framebuffer) brightnessToChar(brightness float64) rune {
+	var ramp []rune
+
+	switch fb.charset {
+	case ASCII:
+		ramp = asciiRamp
+	case UnicodeBlocks:
+		ramp = unicodeBlockRamp
+	case UnicodeShade:
+		ramp = unicodeShadeRamp
+	case UnicodeDense:
+		ramp = unicodeDenseRamp
+	default:
+		ramp = asciiRamp
+	}
+
+	idx := int(brightness * float64(len(ramp)-1))
 	if idx < 0 {
 		idx = 0
 	}
-	if idx >= len(brightnessRamp) {
-		idx = len(brightnessRamp) - 1
+	if idx >= len(ramp) {
+		idx = len(ramp) - 1
 	}
-	return brightnessRamp[idx]
+	return ramp[idx]
 }
 
 // Helper functions

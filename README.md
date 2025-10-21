@@ -1,11 +1,12 @@
 # VESAsterizer
 
-A terminal-based 3D software rasterizer written in Go. Experience the beauty of 3D graphics rendered entirely with ASCII characters in your terminal.
+A terminal-based 3D software rasterizer written in Go. Experience the beauty of 3D graphics rendered entirely with ASCII/Unicode characters in your terminal.
 
 ## Features
 
 - **Pure Software Rasterization**: No GPU required, all rendering done in CPU
-- **Terminal Output**: Renders to ASCII art with depth-aware character brightness
+- **Unicode Character Sets**: Choose from ASCII, Unicode blocks, shading, or dense mode for ultra-sharp rendering
+- **Terminal Output**: Renders to character art with depth-aware brightness mapping
 - **OBJ Model Loading**: Load and display standard Wavefront OBJ files
 - **Real-time Animation**: Smooth rotation and transformation of 3D models
 - **Multiple Render Modes**: Wireframe, solid, or combined rendering
@@ -36,24 +37,35 @@ Load a custom model:
 - `-width <int>` - Terminal width in characters (default: 120)
 - `-height <int>` - Terminal height in characters (default: 40)
 - `-mode <mode>` - Render mode: wireframe, solid, both (default: "wireframe")
+- `-charset <set>` - Character set: ascii, unicode, shade, dense (default: "unicode")
 - `-animate` - Enable rotation animation (default: true)
 - `-fps <int>` - Frames per second for animation (default: 30)
 
 ### Examples
 
-Render a pyramid in solid mode:
+Render a pyramid in solid mode with Unicode blocks:
 ```bash
-./vesasterizer -model examples/models/pyramid.obj -mode solid
+./vesasterizer -model examples/models/pyramid.obj -mode solid -charset unicode
 ```
 
-Static wireframe render of a tetrahedron:
+Static wireframe render of a tetrahedron with dense Unicode:
 ```bash
-./vesasterizer -model examples/models/tetrahedron.obj -animate=false
+./vesasterizer -model examples/models/tetrahedron.obj -animate=false -charset dense
 ```
 
-High FPS solid rendering with wireframe overlay:
+High FPS solid rendering with wireframe overlay and shaded characters:
 ```bash
-./vesasterizer -mode both -fps 60
+./vesasterizer -mode both -fps 60 -charset shade
+```
+
+Classic ASCII mode (for the purists):
+```bash
+./vesasterizer -charset ascii
+```
+
+Ultra-sharp Unicode rendering:
+```bash
+./vesasterizer -mode solid -charset unicode -width 160 -height 50
 ```
 
 ## Technical Details
@@ -73,15 +85,35 @@ High FPS solid rendering with wireframe overlay:
 3. **Projection Transform**: Apply perspective projection
 4. **Viewport Transform**: Map to screen coordinates
 5. **Rasterization**: Convert triangles to pixels with depth testing
-6. **ASCII Conversion**: Map brightness values to ASCII characters
+6. **Character Conversion**: Map brightness values to characters
 
-### Character Brightness Ramp
+### Character Sets
 
-The renderer uses these characters for depth/brightness representation:
+VESAsterizer supports multiple character sets for rendering:
+
+**ASCII** (`-charset ascii`) - Classic ASCII art:
 ```
 ' ' . : - = + * # % @
 ```
-(darkest to brightest)
+
+**Unicode Blocks** (`-charset unicode`) - Smooth block gradient (default):
+```
+' ' ░ ▒ ▓ █
+```
+
+**Unicode Shade** (`-charset shade`) - Extended shading characters:
+```
+' ' · ⋅ ∘ ○ ● ◉ ⬤ ⬛
+```
+
+**Unicode Dense** (`-charset dense`) - Maximum variety with 80+ Unicode characters:
+```
+Various blocks, geometric shapes, circles, and shading characters
+for ultra-fine brightness gradation
+```
+
+Unicode modes provide significantly sharper and more detailed rendering
+compared to classic ASCII.
 
 ## Creating Custom Models
 

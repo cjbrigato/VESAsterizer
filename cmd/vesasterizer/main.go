@@ -18,6 +18,7 @@ func main() {
 	width := flag.Int("width", 120, "Terminal width in characters")
 	height := flag.Int("height", 40, "Terminal height in characters")
 	mode := flag.String("mode", "wireframe", "Render mode: wireframe, solid, both")
+	charset := flag.String("charset", "unicode", "Character set: ascii, unicode, shade, dense")
 	animate := flag.Bool("animate", true, "Enable rotation animation")
 	fps := flag.Int("fps", 30, "Frames per second for animation")
 	flag.Parse()
@@ -34,6 +35,20 @@ func main() {
 
 	// Create framebuffer
 	fb := terminal.NewFramebuffer(*width, *height)
+
+	// Set character set
+	switch *charset {
+	case "ascii":
+		fb.SetCharSet(terminal.ASCII)
+	case "unicode":
+		fb.SetCharSet(terminal.UnicodeBlocks)
+	case "shade":
+		fb.SetCharSet(terminal.UnicodeShade)
+	case "dense":
+		fb.SetCharSet(terminal.UnicodeDense)
+	default:
+		fb.SetCharSet(terminal.UnicodeBlocks)
+	}
 
 	// Create camera
 	camera := renderer.NewCamera()
@@ -88,8 +103,8 @@ func main() {
 		elapsed := time.Since(startTime).Seconds()
 		currentFPS := float64(frameCount) / elapsed
 
-		info := fmt.Sprintf("VESAsterizer | FPS: %.1f | Vertices: %d | Triangles: %d | Mode: %s",
-			currentFPS, len(mesh.Vertices), len(mesh.Triangles), *mode)
+		info := fmt.Sprintf("VESAsterizer | FPS: %.1f | Vertices: %d | Triangles: %d | Mode: %s | CharSet: %s",
+			currentFPS, len(mesh.Vertices), len(mesh.Triangles), *mode, *charset)
 		fmt.Print(fb.RenderWithInfo(info))
 
 		// Frame timing
