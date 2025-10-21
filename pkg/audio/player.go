@@ -6,27 +6,26 @@ import (
 
 // Player plays tracker modules
 type Player struct {
-	module      *TrackerModule
-	voices      []*synth.Voice
-	sampleRate  float64
-	currentPos  int // Position in sequence
-	currentRow  int // Current row in pattern
-	currentTick int // Current tick in row
-	samplesPerTick int
-	done        bool
+	module         *TrackerModule
+	voices         []*synth.Voice
+	sampleRate     float64
+	currentPos     int // Position in sequence
+	currentRow     int // Current row in pattern
+	sampleCounter  int // Sample counter for row timing
+	samplesPerRow  int // Samples before advancing to next row
+	done           bool
 }
 
 // NewPlayer creates a new tracker player
 func NewPlayer(module *TrackerModule, sampleRate float64) *Player {
-	// Calculate samples per tick based on tempo
+	// Calculate samples per row based on tempo
 	// tempo = beats per minute
 	// 1 beat = 4 rows (typically)
-	// samplesPerTick = (60 / tempo) / ticksPerRow * sampleRate
+	// samplesPerRow = (60 / tempo / 4) * sampleRate
 	samplesPerSecond := sampleRate
 	secondsPerBeat := 60.0 / float64(module.Tempo)
 	secondsPerRow := secondsPerBeat / 4.0 // 4 rows per beat
-	secondsPerTick := secondsPerRow / float64(module.TicksPerRow)
-	samplesPerTick := int(secondsPerTick * samplesPerSecond)
+	samplesPerRow := int(secondsPerRow * samplesPerSecond)
 
 	// Create voices (max 8 channels)
 	numChannels := 8
@@ -43,14 +42,14 @@ func NewPlayer(module *TrackerModule, sampleRate float64) *Player {
 	}
 
 	return &Player{
-		module:         module,
-		voices:         voices,
-		sampleRate:     sampleRate,
-		currentPos:     0,
-		currentRow:     0,
-		currentTick:    0,
-		samplesPerTick: samplesPerTick,
-		done:           false,
+		module:        module,
+		voices:        voices,
+		sampleRate:    sampleRate,
+		currentPos:    0,
+		currentRow:    0,
+		sampleCounter: 0,
+		samplesPerRow: samplesPerRow,
+		done:          false,
 	}
 }
 
@@ -61,7 +60,7 @@ func (p *Player) Next() float64 {
 	}
 
 	// Check if we need to process a new row
-	if p.currentTick == 0 {
+	if p.sampleCounter == 0 {
 		p.processRow()
 	}
 
@@ -74,10 +73,10 @@ func (p *Player) Next() float64 {
 	// Simple mixing (average)
 	sample /= float64(len(p.voices))
 
-	// Advance tick counter
-	p.currentTick++
-	if p.currentTick >= p.samplesPerTick {
-		p.currentTick = 0
+	// Advance sample counter
+	p.sampleCounter++
+	if p.sampleCounter >= p.samplesPerRow {
+		p.sampleCounter = 0
 		p.currentRow++
 
 		// Check if we've finished the current pattern
@@ -139,7 +138,7 @@ func (p *Player) IsDone() bool {
 func (p *Player) Reset() {
 	p.currentPos = 0
 	p.currentRow = 0
-	p.currentTick = 0
+	p.sampleCounter = 0
 	p.done = false
 }
 
