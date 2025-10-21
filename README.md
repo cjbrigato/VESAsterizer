@@ -15,9 +15,22 @@ A terminal-based 3D software rasterizer written in Go. Experience the beauty of 
 
 ## Installation
 
+**With audio support** (Linux, Windows, macOS):
 ```bash
 go build -o vesasterizer ./cmd/vesasterizer
 ```
+
+**Without audio** (or if audio libraries unavailable):
+```bash
+go build -tags noaudio -o vesasterizer ./cmd/vesasterizer
+```
+
+**Note**: Audio playback requires system audio libraries:
+- Linux: ALSA development libraries (`libasound2-dev` on Debian/Ubuntu)
+- Windows: Included
+- macOS: Included
+
+If compilation fails due to missing audio libraries, use the `-tags noaudio` flag. The program will work perfectly for visuals; the `-music` flag will simply be ignored.
 
 ## Usage
 
@@ -34,6 +47,7 @@ Load a custom model:
 ### Command-line Options
 
 - `-model <path>` - Path to OBJ model file (default: "examples/models/cube.obj")
+- `-music <path>` - Path to VTM music file for audio playback (optional)
 - `-width <int>` - Terminal width in characters (default: 120)
 - `-height <int>` - Terminal height in characters (default: 40)
 - `-mode <mode>` - Render mode: wireframe, solid, both (default: "wireframe")
@@ -43,17 +57,19 @@ Load a custom model:
 
 ### Examples
 
-Render a pyramid in solid mode with Unicode blocks:
+**Audiovisual demos** (full demoscene experience!):
 ```bash
-./vesasterizer -model examples/models/pyramid.obj -mode solid -charset unicode
+./vesasterizer -model examples/models/demo/torus.obj -music examples/music/demo1.vtm -charset unicode
+./vesasterizer -model examples/models/demo/icosphere.obj -music examples/music/demo2.vtm -charset shade
 ```
 
-Static wireframe render of a tetrahedron with dense Unicode:
+**Visual-only demos**:
 ```bash
+./vesasterizer -model examples/models/pyramid.obj -mode solid -charset unicode
 ./vesasterizer -model examples/models/tetrahedron.obj -animate=false -charset dense
 ```
 
-High FPS solid rendering with wireframe overlay and shaded characters:
+High FPS solid rendering with wireframe overlay:
 ```bash
 ./vesasterizer -mode both -fps 60 -charset shade
 ```
@@ -63,10 +79,16 @@ Classic ASCII mode (for the purists):
 ./vesasterizer -charset ascii
 ```
 
-Ultra-sharp Unicode rendering:
+Ultra-sharp Unicode rendering with music:
 ```bash
-./vesasterizer -mode solid -charset unicode -width 160 -height 50
+./vesasterizer -model examples/models/demo/torus.obj -music examples/music/demo1.vtm -mode solid -charset unicode -width 160 -height 50
 ```
+
+**Run the full demo showcase**:
+```bash
+./demo.sh
+```
+(Cycles through all audiovisual demos automatically)
 
 ## Technical Details
 

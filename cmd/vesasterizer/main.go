@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/cjbrigato/VESAsterizer/pkg/audio"
 	"github.com/cjbrigato/VESAsterizer/pkg/loader"
 	"github.com/cjbrigato/VESAsterizer/pkg/math3d"
 	"github.com/cjbrigato/VESAsterizer/pkg/renderer"
@@ -15,6 +16,7 @@ import (
 func main() {
 	// Command-line flags
 	modelFile := flag.String("model", "examples/models/cube.obj", "Path to OBJ model file")
+	musicFile := flag.String("music", "", "Path to VTM music file (optional)")
 	width := flag.Int("width", 120, "Terminal width in characters")
 	height := flag.Int("height", 40, "Terminal height in characters")
 	mode := flag.String("mode", "wireframe", "Render mode: wireframe, solid, both")
@@ -31,6 +33,26 @@ func main() {
 	}
 
 	fmt.Printf("Loaded model: %d vertices, %d triangles\n", len(mesh.Vertices), len(mesh.Triangles))
+
+	// Load and start music if specified
+	var audioPlayback *audio.AudioPlayback
+	if *musicFile != "" {
+		module, err := audio.LoadVTM(*musicFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Could not load music: %v\n", err)
+		} else {
+			fmt.Printf("Loaded music: %s (%d BPM)\n", module.Title, module.Tempo)
+			audioPlayback, err = audio.NewAudioPlayback(module, 44100)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Could not initialize audio: %v\n", err)
+				audioPlayback = nil
+			} else {
+				audioPlayback.Play()
+				defer audioPlayback.Stop()
+			}
+		}
+	}
+
 	time.Sleep(1 * time.Second)
 
 	// Create framebuffer
@@ -105,6 +127,11 @@ func main() {
 
 		info := fmt.Sprintf("VESAsterizer | FPS: %.1f | Vertices: %d | Triangles: %d | Mode: %s | CharSet: %s",
 			currentFPS, len(mesh.Vertices), len(mesh.Triangles), *mode, *charset)
+
+		if audioPlayback != nil && !audioPlayback.IsDone() {
+			info += " | \u266B MUSIC PLAYING"
+		}
+
 		fmt.Print(fb.RenderWithInfo(info))
 
 		// Frame timing
