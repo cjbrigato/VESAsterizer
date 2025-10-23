@@ -35,13 +35,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	*width, *height, err = term.GetSize(int(os.Stdout.Fd()))
+	termW, termH, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error getting terminal size: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("Terminal size: %d x %d\n", *width, *height)
+	nbInfosLines := 4
+
+	fmt.Printf("Terminal size: %d x %d\n", termW, termH)
+	*width = termW - 1
+	*height = termH - nbInfosLines
 	fmt.Printf("Loaded model: %d vertices, %d triangles\n", len(mesh.Vertices), len(mesh.Triangles))
 
 	// Load and start music if specified
@@ -63,7 +67,7 @@ func main() {
 		}
 	}
 
-	time.Sleep(1 * time.Second)
+	//time.Sleep(1 * time.Second)
 
 	// Create framebuffer
 	fb := terminal.NewFramebuffer(*width, *height)

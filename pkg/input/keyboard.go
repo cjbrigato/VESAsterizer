@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	QuitKey       = "q"
+	QuitKey       = keys.Escape
 	CAMPOSX_PLUS  = "a"
 	CAMPOSX_MINUS = "q"
 	CAMPOSY_PLUS  = "z"
@@ -62,17 +62,12 @@ func QuitFromKey() {
 func ListenForKeyPress(cc *CameraControls) {
 	keyboard.Listen(func(key keys.Key) (stop bool, err error) {
 		switch key.Code {
-		case keys.CtrlC, keys.Escape:
-			QuitFromKey()
+		case QuitKey:
 			return true, nil // Return true to stop listener
 		default:
-			if key.String() == QuitKey {
-				QuitFromKey()
-			}
 			cc.UpdateCamera(key.String())
-			fmt.Printf("\rYou pressed the key: %s\n", key)
 		}
-
 		return false, nil // Return false to continue listening
 	})
+	QuitFromKey()
 }
