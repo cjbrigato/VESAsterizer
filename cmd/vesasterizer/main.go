@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"runtime"
 	"time"
@@ -89,8 +90,8 @@ func main() {
 	// Create camera
 	camera := renderer.NewCamera()
 	camera.Aspect = float64(*width) / float64(*height)
-	camera.Position = math3d.NewVec3(0, 0, 0)
-	camera.Rotation = math3d.NewVec3(0, 0, 0)
+	camera.Position = math3d.NewVec3(600, 600, -600)
+	camera.Rotation = math3d.NewVec3(0, 0, math.Pi)
 
 	cameraControls := input.NewCameraControls(camera)
 	go input.ListenForKeyPress(cameraControls)
@@ -112,8 +113,13 @@ func main() {
 	if !*animate {
 		// Single frame render using World
 		r.Clear()
+		// Add grid plane
+		grid := loader.NewGridPlane(20, 20)
+		gridInst := renderer.NewMeshInstance(grid)
+		world.AddInstance(gridInst)
+		// Add main mesh
 		inst := renderer.NewMeshInstance(mesh)
-		inst.Position = math3d.NewVec3(0, 100, 0)
+		inst.Position = math3d.NewVec3(000, 1200, 000)
 		world.AddInstance(inst)
 		r.RenderWorld(world)
 		fb.Print()
@@ -129,7 +135,13 @@ func main() {
 	frameCount := 0
 
 	// Create instances for animation
+	// Add grid plane
+	//grid := loader.NewGridPlane(50, 50)
+	//gridInst := renderer.NewMeshInstance(grid)
+	//world.AddInstance(gridInst)
+	// Add main mesh
 	inst := renderer.NewMeshInstance(mesh)
+	inst.Position = math3d.NewVec3(1200, 0, 1200)
 	world.AddInstance(inst)
 	for {
 		frameStart := time.Now()

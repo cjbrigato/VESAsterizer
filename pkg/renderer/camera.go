@@ -21,7 +21,7 @@ func NewCamera() *Camera {
 	return &Camera{
 		Position: math3d.NewVec3(0, 0, 5),
 		Rotation: math3d.NewVec3(0, 0, 0),
-		FOV:      math.Pi / 3.0, // 60 degrees
+		FOV:      math.Pi / 4.0, // 60 degrees
 		Aspect:   16.0 / 9.0,
 		Near:     0.1,
 		Far:      100.0,
