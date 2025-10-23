@@ -89,13 +89,15 @@ func main() {
 	// Create camera
 	camera := renderer.NewCamera()
 	camera.Aspect = float64(*width) / float64(*height)
-	camera.Position = math3d.NewVec3(-200, -710, 3)
+	camera.Position = math3d.NewVec3(0, 0, 0)
 	camera.Rotation = math3d.NewVec3(0, 0, 0)
 
 	cameraControls := input.NewCameraControls(camera)
 	go input.ListenForKeyPress(cameraControls)
 	// Create renderer
-	r := renderer.NewRenderer(fb, camera)
+	r := renderer.NewRenderer(fb)
+	// Create world and add instances
+	world := renderer.NewWorld(camera)
 
 	// Set render mode
 	switch *mode {
@@ -108,10 +110,12 @@ func main() {
 	}
 
 	if !*animate {
-		// Single frame render using MeshInstance
+		// Single frame render using World
 		r.Clear()
 		inst := renderer.NewMeshInstance(mesh)
-		r.RenderInstance(inst)
+		inst.Position = math3d.NewVec3(0, 100, 0)
+		world.AddInstance(inst)
+		r.RenderWorld(world)
 		fb.Print()
 		// Ensure audioPlayback is considered live until here
 		runtime.KeepAlive(audioPlayback)
@@ -124,8 +128,9 @@ func main() {
 	startTime := time.Now()
 	frameCount := 0
 
-	// Create instance for animation
+	// Create instances for animation
 	inst := renderer.NewMeshInstance(mesh)
+	world.AddInstance(inst)
 	for {
 		frameStart := time.Now()
 
@@ -137,7 +142,7 @@ func main() {
 
 		// Render
 		r.Clear()
-		r.RenderInstance(inst)
+		r.RenderWorld(world)
 
 		// Display info
 		frameCount++

@@ -19,9 +19,8 @@ const (
 
 // Renderer handles the rasterization of 3D meshes to a framebuffer
 type Renderer struct {
-	fb     *terminal.Framebuffer
-	camera *Camera
-	mode   RenderMode
+	fb   *terminal.Framebuffer
+	mode RenderMode
 }
 
 // MeshInstance represents a mesh placed in world space with TRS
@@ -55,11 +54,10 @@ func (mi *MeshInstance) ModelMatrix() math3d.Mat4 {
 }
 
 // NewRenderer creates a new renderer
-func NewRenderer(fb *terminal.Framebuffer, camera *Camera) *Renderer {
+func NewRenderer(fb *terminal.Framebuffer) *Renderer {
 	return &Renderer{
-		fb:     fb,
-		camera: camera,
-		mode:   Wireframe,
+		fb:   fb,
+		mode: Wireframe,
 	}
 }
 
@@ -73,51 +71,60 @@ func (r *Renderer) Clear() {
 	r.fb.Clear()
 }
 
-// RenderMesh renders a mesh with the given transformation matrix
-func (r *Renderer) RenderMesh(mesh *loader.Mesh, modelMatrix math3d.Mat4) {
-	view := r.camera.ViewMatrix()
-	projection := r.camera.ProjectionMatrix()
-	viewport := math3d.Viewport(0, 0, float64(r.fb.Width), float64(r.fb.Height))
+// World represents a collection of instances and a camera
+type World struct {
+	Camera    *Camera
+	Instances []*MeshInstance
+}
 
-	// Combined transformation matrix
-	mvp := projection.Mul(view).Mul(modelMatrix)
-	mvpViewport := viewport.Mul(mvp)
+// NewWorld creates a new world with the given camera
+func NewWorld(camera *Camera) *World {
+	return &World{Camera: camera, Instances: make([]*MeshInstance, 0)}
+}
+
+// AddInstance adds a mesh instance to the world
+func (w *World) AddInstance(mi *MeshInstance) {
+	w.Instances = append(w.Instances, mi)
+}
+
+// RenderWorld renders all instances in the world from the world's camera POV
+func (r *Renderer) RenderWorld(w *World) {
+	view := w.Camera.ViewMatrix()
+	projection := w.Camera.ProjectionMatrix()
+	viewport := math3d.Viewport(0, 0, float64(r.fb.Width), float64(r.fb.Height))
 
 	// Light direction (simple directional light)
 	lightDir := math3d.NewVec3(0, 0, -1).Normalize()
 
-	for _, tri := range mesh.Triangles {
-		// Transform vertices
-		v0 := mvpViewport.MulVec4(math3d.Vec3ToVec4(tri.V0, 1)).ToVec3()
-		v1 := mvpViewport.MulVec4(math3d.Vec3ToVec4(tri.V1, 1)).ToVec3()
-		v2 := mvpViewport.MulVec4(math3d.Vec3ToVec4(tri.V2, 1)).ToVec3()
+	for _, mi := range w.Instances {
+		modelMatrix := mi.ModelMatrix()
+		mvp := projection.Mul(view).Mul(modelMatrix)
+		mvpViewport := viewport.Mul(mvp)
 
-		// Compute normal for lighting (in world space)
-		normal := tri.ComputeNormal()
-		brightness := math.Max(0, normal.Dot(lightDir))
+		for _, tri := range mi.Mesh.Triangles {
+			v0 := mvpViewport.MulVec4(math3d.Vec3ToVec4(tri.V0, 1)).ToVec3()
+			v1 := mvpViewport.MulVec4(math3d.Vec3ToVec4(tri.V1, 1)).ToVec3()
+			v2 := mvpViewport.MulVec4(math3d.Vec3ToVec4(tri.V2, 1)).ToVec3()
 
-		// Back-face culling (optional)
-		screenNormal := v1.Sub(v0).Cross(v2.Sub(v0))
-		if screenNormal.Z <= 0 {
-			continue // Back-facing, skip
-		}
+			normal := tri.ComputeNormal()
+			brightness := math.Max(0, normal.Dot(lightDir))
 
-		// Render based on mode
-		switch r.mode {
-		case Wireframe:
-			r.drawWireframe(v0, v1, v2)
-		case Solid:
-			r.fillTriangle(v0, v1, v2, brightness)
-		case SolidWireframe:
-			r.fillTriangle(v0, v1, v2, brightness)
-			r.drawWireframe(v0, v1, v2)
+			screenNormal := v1.Sub(v0).Cross(v2.Sub(v0))
+			if screenNormal.Z <= 0 {
+				continue
+			}
+
+			switch r.mode {
+			case Wireframe:
+				r.drawWireframe(v0, v1, v2)
+			case Solid:
+				r.fillTriangle(v0, v1, v2, brightness)
+			case SolidWireframe:
+				r.fillTriangle(v0, v1, v2, brightness)
+				r.drawWireframe(v0, v1, v2)
+			}
 		}
 	}
-}
-
-// RenderInstance renders a MeshInstance using its model matrix
-func (r *Renderer) RenderInstance(mi *MeshInstance) {
-	r.RenderMesh(mi.Mesh, mi.ModelMatrix())
 }
 
 // drawWireframe draws the edges of a triangle
