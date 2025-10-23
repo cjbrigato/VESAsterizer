@@ -11,10 +11,11 @@ import (
 
 // AudioPlayback handles real-time audio output
 type AudioPlayback struct {
-	otoContext *oto.Context
-	player     *Player
-	sampleRate int
-	done       chan bool
+	otoContext  *oto.Context
+	player      *Player
+	sampleRate  int
+	done        chan bool
+	audioPlayer *oto.Player
 }
 
 // NewAudioPlayback creates a new audio playback system
@@ -47,15 +48,13 @@ func NewAudioPlayback(module *TrackerModule, sampleRate int) (*AudioPlayback, er
 
 // Play starts audio playback in a goroutine
 func (ap *AudioPlayback) Play() error {
-	audioPlayer := ap.otoContext.NewPlayer(&audioReader{
+	ap.audioPlayer = ap.otoContext.NewPlayer(&audioReader{
 		player:     ap.player,
 		sampleRate: ap.sampleRate,
 		done:       ap.done,
 	})
 
-	go func() {
-		audioPlayer.Play()
-	}()
+	ap.audioPlayer.Play()
 
 	return nil
 }
@@ -103,7 +102,7 @@ func (ar *audioReader) Read(p []byte) (n int, err error) {
 		sampleBytes := float32ToBytes(sample)
 
 		// Write stereo (same sample for both channels)
-		offset := i * 8 // 4 bytes per float32 * 2 channels
+		offset := i * 8                         // 4 bytes per float32 * 2 channels
 		copy(p[offset:offset+4], sampleBytes)   // Left channel
 		copy(p[offset+4:offset+8], sampleBytes) // Right channel
 	}
