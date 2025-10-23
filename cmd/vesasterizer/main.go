@@ -90,6 +90,7 @@ func main() {
 	camera := renderer.NewCamera()
 	camera.Aspect = float64(*width) / float64(*height)
 	camera.Position = math3d.NewVec3(-200, -710, 3)
+	camera.Rotation = math3d.NewVec3(0, 0, 0)
 
 	cameraControls := input.NewCameraControls(camera)
 	go input.ListenForKeyPress(cameraControls)
@@ -153,10 +154,8 @@ func main() {
 		switch cameraControls.ControlType {
 		case input.CameraControlTypePosition:
 			vec3ToShow = &camera.Position
-		case input.CameraControlTypeTarget:
-			vec3ToShow = &camera.Target
-		case input.CameraControlTypeUp:
-			vec3ToShow = &camera.Up
+		case input.CameraControlTypeRotation:
+			vec3ToShow = &camera.Rotation
 		}
 		info += fmt.Sprintf(" | %s: %.2f, %.2f, %.2f", cameraControls.ControlType.String(), vec3ToShow.X, vec3ToShow.Y, vec3ToShow.Z)
 		info += fmt.Sprintf(" | Step: %.2f", cameraControls.Step)

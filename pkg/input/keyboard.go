@@ -14,8 +14,7 @@ type CameraControlType int
 
 const (
 	CameraControlTypePosition CameraControlType = iota
-	CameraControlTypeTarget
-	CameraControlTypeUp
+	CameraControlTypeRotation
 	CameraControlTypeMax
 )
 
@@ -23,10 +22,8 @@ func (c CameraControlType) String() string {
 	switch c {
 	case CameraControlTypePosition:
 		return "Position"
-	case CameraControlTypeTarget:
-		return "Target"
-	case CameraControlTypeUp:
-		return "Up"
+	case CameraControlTypeRotation:
+		return "Rotation"
 	}
 	return "Unknown"
 }
@@ -90,10 +87,8 @@ func (cc *CameraControls) UpdateCamera(key string) {
 	switch cc.ControlType {
 	case CameraControlTypePosition:
 		vec3ToUpdate = &cc.Camera.Position
-	case CameraControlTypeTarget:
-		vec3ToUpdate = &cc.Camera.Target
-	case CameraControlTypeUp:
-		vec3ToUpdate = &cc.Camera.Up
+	case CameraControlTypeRotation:
+		vec3ToUpdate = &cc.Camera.Rotation
 	default:
 		vec3ToUpdate = &cc.Camera.Position
 	}
@@ -117,15 +112,16 @@ func (cc *CameraControls) UpdateCamera(key string) {
 		cc.Step -= 5.0
 	}
 
+	// Map discrete yaw/pitch keys to camera Euler angles
 	switch key {
 	case YAW_PLUS:
-		cc.Camera.RotateView(0.05, 0)
+		cc.Camera.Rotation.Y += 0.05
 	case YAW_MINUS:
-		cc.Camera.RotateView(-0.05, 0)
+		cc.Camera.Rotation.Y -= 0.05
 	case PITCH_PLUS:
-		cc.Camera.RotateView(0, 0.05)
+		cc.Camera.Rotation.X += 0.05
 	case PITCH_MINUS:
-		cc.Camera.RotateView(0, -0.05)
+		cc.Camera.Rotation.X -= 0.05
 	}
 }
 
