@@ -53,3 +53,38 @@ func (c *Camera) OrbitAround(yaw, pitch float64) {
 
 	c.Position = c.Target.Add(math3d.NewVec3(x, y, z))
 }
+//                T  --> PTCH+
+//F---> YAW-      G-->PTCH-       H  --> YAW+
+// RotateView rotates the camera's point of view (turn head) around its position.
+// Positive yaw rotates to the right around the camera up vector.
+// Positive pitch rotates up around the camera right vector.
+func (c *Camera) RotateView(yaw, pitch float64) {
+	// Direction from camera to target
+	dir := c.Target.Sub(c.Position).Normalize()
+
+	// Rotate direction by yaw around current up vector
+	dir = rotateAroundAxis(dir, c.Up.Normalize(), yaw)
+
+	// Recompute right vector after yaw
+	right := dir.Cross(c.Up).Normalize()
+
+	// Rotate direction by pitch around right vector
+	dir = rotateAroundAxis(dir, right, pitch)
+
+	// Recompute an orthonormal up vector and update target
+	c.Up = right.Cross(dir).Normalize()
+	c.Target = c.Position.Add(dir)
+}
+
+// rotateAroundAxis rotates vector v around an arbitrary axis by angle (radians)
+// using Rodrigues' rotation formula. Axis is assumed to be non-zero.
+func rotateAroundAxis(v, axis math3d.Vec3, angle float64) math3d.Vec3 {
+	k := axis.Normalize()
+	c := math.Cos(angle)
+	s := math.Sin(angle)
+	// v*cosθ + (k×v)*sinθ + k*(k·v)*(1-cosθ)
+	term1 := v.Mul(c)
+	term2 := k.Cross(v).Mul(s)
+	term3 := k.Mul(k.Dot(v) * (1 - c))
+	return term1.Add(term2).Add(term3)
+}

@@ -24,6 +24,36 @@ type Renderer struct {
 	mode   RenderMode
 }
 
+// MeshInstance represents a mesh placed in world space with TRS
+type MeshInstance struct {
+	Mesh     *loader.Mesh
+	Position math3d.Vec3
+	Rotation math3d.Vec3 // Euler angles in radians: X(pitch), Y(yaw), Z(roll)
+	Scale    math3d.Vec3
+}
+
+// NewMeshInstance creates a new instance with default transforms
+func NewMeshInstance(mesh *loader.Mesh) *MeshInstance {
+	return &MeshInstance{
+		Mesh:     mesh,
+		Position: math3d.NewVec3(0, 0, 0),
+		Rotation: math3d.NewVec3(0, 0, 0),
+		Scale:    math3d.NewVec3(1, 1, 1),
+	}
+}
+
+// ModelMatrix builds the model matrix from TRS
+func (mi *MeshInstance) ModelMatrix() math3d.Mat4 {
+	t := math3d.Translation(mi.Position.X, mi.Position.Y, mi.Position.Z)
+	rx := math3d.RotationX(mi.Rotation.X)
+	ry := math3d.RotationY(mi.Rotation.Y)
+	rz := math3d.RotationZ(mi.Rotation.Z)
+	s := math3d.Scale(mi.Scale.X, mi.Scale.Y, mi.Scale.Z)
+
+	r := rz.Mul(ry).Mul(rx)
+	return t.Mul(r).Mul(s)
+}
+
 // NewRenderer creates a new renderer
 func NewRenderer(fb *terminal.Framebuffer, camera *Camera) *Renderer {
 	return &Renderer{
@@ -83,6 +113,11 @@ func (r *Renderer) RenderMesh(mesh *loader.Mesh, modelMatrix math3d.Mat4) {
 			r.drawWireframe(v0, v1, v2)
 		}
 	}
+}
+
+// RenderInstance renders a MeshInstance using its model matrix
+func (r *Renderer) RenderInstance(mi *MeshInstance) {
+	r.RenderMesh(mi.Mesh, mi.ModelMatrix())
 }
 
 // drawWireframe draws the edges of a triangle

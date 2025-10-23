@@ -89,9 +89,10 @@ func main() {
 	// Create camera
 	camera := renderer.NewCamera()
 	camera.Aspect = float64(*width) / float64(*height)
-	camera.Position = math3d.NewVec3(1, 2, 3)
+	camera.Position = math3d.NewVec3(-200, -710, 3)
 
-	go input.ListenForKeyPress(input.NewCameraControls(camera))
+	cameraControls := input.NewCameraControls(camera)
+	go input.ListenForKeyPress(cameraControls)
 	// Create renderer
 	r := renderer.NewRenderer(fb, camera)
 
@@ -106,11 +107,13 @@ func main() {
 	}
 
 	if !*animate {
-		// Single frame render
+		// Single frame render using MeshInstance
 		r.Clear()
-		modelMatrix := math3d.Identity()
-		r.RenderMesh(mesh, modelMatrix)
+		inst := renderer.NewMeshInstance(mesh)
+		r.RenderInstance(inst)
 		fb.Print()
+		// Ensure audioPlayback is considered live until here
+		runtime.KeepAlive(audioPlayback)
 		return
 	}
 
@@ -120,21 +123,20 @@ func main() {
 	startTime := time.Now()
 	frameCount := 0
 
+	// Create instance for animation
+	inst := renderer.NewMeshInstance(mesh)
 	for {
 		frameStart := time.Now()
 
 		// Update rotation
 		angle += 0.02
 
-		// Create model transformation matrix
-		rotY := math3d.RotationY(angle)
-		//rotX := math3d.RotationX(angle * 0.5)
-		//modelMatrix := rotY.Mul(rotX)
-		modelMatrix := rotY
+		// Update instance rotation (spin around Y)
+		inst.Rotation.Y = angle
 
 		// Render
 		r.Clear()
-		r.RenderMesh(mesh, modelMatrix)
+		r.RenderInstance(inst)
 
 		// Display info
 		frameCount++
@@ -147,8 +149,22 @@ func main() {
 		if audioPlayback != nil && !audioPlayback.IsDone() {
 			info += " | \u266B MUSIC PLAYING"
 		}
+		var vec3ToShow *math3d.Vec3
+		switch cameraControls.ControlType {
+		case input.CameraControlTypePosition:
+			vec3ToShow = &camera.Position
+		case input.CameraControlTypeTarget:
+			vec3ToShow = &camera.Target
+		case input.CameraControlTypeUp:
+			vec3ToShow = &camera.Up
+		}
+		info += fmt.Sprintf(" | %s: %.2f, %.2f, %.2f", cameraControls.ControlType.String(), vec3ToShow.X, vec3ToShow.Y, vec3ToShow.Z)
+		info += fmt.Sprintf(" | Step: %.2f", cameraControls.Step)
 
 		fmt.Print(fb.RenderWithInfo(info))
+
+		// Ensure audioPlayback is considered live while the loop runs
+		runtime.KeepAlive(audioPlayback)
 
 		// Frame timing
 		frameTime := time.Since(frameStart)
@@ -156,5 +172,4 @@ func main() {
 			time.Sleep(frameDuration - frameTime)
 		}
 	}
-	runtime.KeepAlive(audioPlayback)
 }
