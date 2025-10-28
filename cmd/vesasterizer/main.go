@@ -8,12 +8,13 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/cjbrigato/VESAsterizer/pkg/audio"
 	"github.com/cjbrigato/VESAsterizer/pkg/input"
 	"github.com/cjbrigato/VESAsterizer/pkg/loader"
 	"github.com/cjbrigato/VESAsterizer/pkg/math3d"
 	"github.com/cjbrigato/VESAsterizer/pkg/renderer"
 	"github.com/cjbrigato/VESAsterizer/pkg/terminal"
+	"github.com/cjbrigato/go-vtm/audio"
+	"github.com/cjbrigato/go-vtm/tracker"
 	"golang.org/x/term"
 )
 
@@ -52,7 +53,7 @@ func main() {
 	// Load and start music if specified
 	var audioPlayback *audio.AudioPlayback
 	if *musicFile != "" {
-		module, err := audio.LoadVTM(*musicFile)
+		module, err := tracker.LoadVTM(*musicFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: Could not load music: %v\n", err)
 		} else {
